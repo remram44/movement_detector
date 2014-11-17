@@ -100,6 +100,9 @@ def debug():
         prev_frames.insert(0, image)
         prev_frames = prev_frames[:2]
 
+        if cv2.waitKey(1) != -1:
+            break
+
 
 if __name__ == '__main__':
     debug()
