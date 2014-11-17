@@ -1,6 +1,6 @@
 import logging
 import cv2
-from flask import Flask, render_template, send_file
+from flask import Flask, render_template, Response, send_file
 from flask.globals import request
 import io
 import os
@@ -36,7 +36,31 @@ def index():
 def history():
     """History page: show movement graphs.
     """
-    todo
+    return render_template('history.html')
+
+
+@app.route('/history.csv')
+def history_csv():
+    sqlsession = Session()
+    detections = (sqlsession.query(models.Detection)
+                            .order_by(models.Detection.id)
+                            .all())
+
+    def generator():
+        yield "Date,Movement\n"
+        for detection in detections:
+            yield '%s,%s\n' % (
+                    detection.date,
+                    '1' if detection.changes >= config.MIN_PIXEL_CHANGES
+                    else '0')
+
+    if 'text' in request.args:
+        return Response(generator(),
+                        mimetype='text/plain')
+    return Response(generator(),
+                    mimetype='text/csv',
+                    headers={'Content-Disposition':
+                             'attachment;filename=history.csv'})
 
 
 @app.route('/detection')
