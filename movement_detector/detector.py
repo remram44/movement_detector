@@ -2,6 +2,9 @@ import cv2
 import numpy
 
 
+from movement_detector import config
+
+
 class FrameGrabber(object):
     def __init__(self, device=0, keep_open=False):
         self._device = device
@@ -25,10 +28,10 @@ class FrameGrabber(object):
             self._capture.release()
 
 
-def detect_motion(motion, max_deviation):
+def detect_motion(motion):
     mean, std_dev = cv2.meanStdDev(motion)
     std_dev = std_dev[0, 0]
-    if std_dev > max_deviation:
+    if std_dev > config.MAX_DEVIATION:
         return 0, None, std_dev
 
     where = numpy.argwhere(motion == 255)
@@ -40,7 +43,8 @@ def detect_motion(motion, max_deviation):
         return number_of_changes, None, std_dev
 
 
-kernel_ero = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+kernel_ero = cv2.getStructuringElement(cv2.MORPH_RECT,
+                                       (config.EROSION_SIZE, config.EROSION_SIZE))
 
 
 def detect(capture, prev_images):
@@ -63,13 +67,12 @@ def detect(capture, prev_images):
     motion = cv2.bitwise_and(d1, d2)
 
     # Threshold & erode
-    cv2.threshold(motion, 35, 255, cv2.THRESH_BINARY, dst=motion)
+    cv2.threshold(motion, config.DIFF_THRESHOLD, 255, cv2.THRESH_BINARY,
+                  dst=motion)
     cv2.erode(motion, kernel_ero, dst=motion)
 
     # Find and count changes
-    number_of_changes, location, std_dev = detect_motion(motion, 60)
-    if number_of_changes < 5:
-        location = None
+    number_of_changes, location, std_dev = detect_motion(motion)
 
     return number_of_changes, std_dev, new_frame, location
 

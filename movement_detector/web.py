@@ -26,7 +26,7 @@ def index():
     except NoResultFound:
         movement = False
     else:
-        movement = latest_detection.changes > 5
+        movement = latest_detection.changes >= config.MIN_PIXEL_CHANGES
 
     return render_template('index.html',
                            movement=movement)
