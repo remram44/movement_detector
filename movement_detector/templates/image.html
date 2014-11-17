@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if detection %}
+<p>Detection #{{ detection.id }}</p>
+<p>Date: {{ detection.date }}</p>
+<p>Standard deviation: {{ detection.deviation }}</p>
+<p>Changed pixels: {{ detection.changes }}</p>
+<p>
+    <img src="/images/{{ detection.image }}" />
+</p>
+{% else %}
+<p>No image for that date</p>
+{% endif %}
+{% endblock %}
