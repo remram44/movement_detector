@@ -1,3 +1,4 @@
+import logging
 import cv2
 from flask import Flask, render_template, send_file
 from flask.globals import request
@@ -19,11 +20,10 @@ def index():
     """Landing page: show if movement is happening.
     """
     sqlsession = Session()
-    try:
-        latest_detection = (sqlsession.query(models.Detection)
-                                      .order_by(models.Detection.id.desc())
-                                      .first())
-    except NoResultFound:
+    latest_detection = (sqlsession.query(models.Detection)
+                                  .order_by(models.Detection.id.desc())
+                                  .first())
+    if latest_detection is None:
         movement = False
     else:
         movement = latest_detection.changes >= config.MIN_PIXEL_CHANGES
@@ -54,6 +54,8 @@ def show_detection():
             detection = (sqlsession.query(models.Detection)
                                    .order_by(models.Detection.id.desc())
                                    .first())
+            if detection is None:
+                raise NoResultFound
     except NoResultFound:
         return render_template('detection.html'), 404
     else:
@@ -86,4 +88,5 @@ def generate_image(detection_id):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.WARNING)
     app.run(debug=True)
