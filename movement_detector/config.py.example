@@ -1,4 +1,5 @@
 DATABASE_URI = 'sqlite:///database.sqlite3'
 SECRET_KEY = ('AEEuBD6hrqSGZYXYnUCanDl7AXN8pAdQmbn2TjrT'
               'jb7DtVAzM8PIbtb1w3jvjixmOKe3vqiocDpjH7Hz')
+CAPTURE_DEVICE = 0
 IMAGE_DIRECTORY = '/tmp/movement_images'

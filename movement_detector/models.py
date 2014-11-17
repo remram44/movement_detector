@@ -12,6 +12,7 @@ class Detection(Base):
 
     id = Column(Integer, primary_key=True)
     date = Column(DateTime, nullable=False, default=datetime.utcnow)
-    deviation = Column(Float, nullable=False)
-    changes = Column(Integer, nullable=False)
+    deviation = Column(Float, nullable=True)
+    changes = Column(Integer, nullable=True)
     image = Column(String, nullable=True)
+    location = Column(String, nullable=True)

@@ -27,37 +27,35 @@ class FrameGrabber(object):
 
 def detect_motion(motion, max_deviation):
     mean, std_dev = cv2.meanStdDev(motion)
-    if std_dev[0] > max_deviation:
-        return 0, None, std_dev[0]
+    std_dev = std_dev[0, 0]
+    if std_dev > max_deviation:
+        return 0, None, std_dev
 
     where = numpy.argwhere(motion == 255)
-    print where
     number_of_changes = len(where)
     if number_of_changes:
         (min_y, min_x), (max_y, max_x) = where.min(0), where.max(0)
-        return number_of_changes, (min_x, max_x, min_y, max_y), std_dev[0]
+        return number_of_changes, (min_x, min_y, max_x, max_y), std_dev
     else:
-        return number_of_changes, None, std_dev[0]
+        return number_of_changes, None, std_dev
 
 
-current_frame = next_frame = None
+kernel_ero = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
 
 
-def loop(capture, init=False, debug=False):
-    global current_frame, next_frame
-
-    # Initialize on first run
-    if init or current_frame is None:
-        next_frame = capture.grab_frame()
-        next_frame = cv2.cvtColor(next_frame, cv2.COLOR_BGR2GRAY)
-
-        current_frame = next_frame
-
+def detect(capture, prev_images):
     # Capture a new frame
     new_frame = capture.grab_frame()
-    prev_frame, current_frame, next_frame = \
-        current_frame, next_frame, cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
-    kernel_ero = cv2.getStructuringElement(cv2.MORPH_RECT, (10, 10))
+
+    # Not enough frames: no detection, just store this one
+    if len(prev_images) < 2:
+        return None, None, new_frame, None
+
+    # Everything to grayscale
+    prev_images = [prev_images[1], prev_images[0], new_frame]
+    prev_images = [cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
+                   for prev_frame in prev_images]
+    prev_frame, current_frame, next_frame = prev_images
 
     # Diff
     d1 = cv2.absdiff(prev_frame, next_frame)
@@ -69,29 +67,31 @@ def loop(capture, init=False, debug=False):
     cv2.erode(motion, kernel_ero, dst=motion)
 
     # Find and count changes
-    number_of_changes, result, std_dev = detect_motion(motion, 60)
+    number_of_changes, location, std_dev = detect_motion(motion, 60)
+    if number_of_changes < 5:
+        location = None
 
-    print("Deviation: %r" % std_dev)
-    if number_of_changes >= 5:
-        cv2.rectangle(new_frame,
-                      (result[0], result[2]), (result[1], result[3]),
-                      (0, 0, 255), 5)
-        print("Changes: %r" % number_of_changes)
-        print(result)
-    else:
-        print("No changes: %r" % number_of_changes)
-
-    if debug:
-        import matplotlib.pyplot as plt
-        plt.imshow(new_frame[:, :, (2, 1, 0)])
-        plt.show()
+    return number_of_changes, std_dev, new_frame, location
 
 
-if __name__ == '__main__':
+def debug():
+    import matplotlib.pyplot as plt
     import time
 
     camera = FrameGrabber(keep_open=True)
 
     while True:
-        loop(camera, debug=True)
+        changes, deviation, image, location = detect(camera)
+        cv2.rectangle(image,
+                      location[0:1], location[2:3],
+                      (0, 0, 255), 5)
+        print("Deviation: %r" % deviation)
+        print("Changes: %r" % changes)
+        plt.imshow(image[:, :, (2, 1, 0)])
+        plt.show()
+
         time.sleep(5)
+
+
+if __name__ == '__main__':
+    debug()

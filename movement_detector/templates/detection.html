@@ -7,9 +7,9 @@
 <p>Standard deviation: {{ detection.deviation }}</p>
 <p>Changed pixels: {{ detection.changes }}</p>
 <p>
-    <img src="/images/{{ detection.image }}" />
+    <img src="/images/{{ detection.id }}" />
 </p>
 {% else %}
-<p>No image for that date</p>
+<p>No data here</p>
 {% endif %}
 {% endblock %}
