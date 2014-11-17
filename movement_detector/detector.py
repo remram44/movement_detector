@@ -78,7 +78,7 @@ def detect(capture, prev_images):
 
 
 def debug():
-    camera = FrameGrabber(keep_open=True)
+    camera = FrameGrabber(-1, keep_open=True)
 
     prev_frames = []
 
