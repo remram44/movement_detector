@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 
-from movement_detector import config, models
-from movement_detector import detector
+from movement_detector import config, detector, models
 from movement_detector.storage import Session
 
 

@@ -75,22 +75,27 @@ def detect(capture, prev_images):
 
 
 def debug():
-    import matplotlib.pyplot as plt
-    import time
-
     camera = FrameGrabber(keep_open=True)
 
-    while True:
-        changes, deviation, image, location = detect(camera)
-        cv2.rectangle(image,
-                      location[0:1], location[2:3],
-                      (0, 0, 255), 5)
-        print("Deviation: %r" % deviation)
-        print("Changes: %r" % changes)
-        plt.imshow(image[:, :, (2, 1, 0)])
-        plt.show()
+    prev_frames = []
 
-        time.sleep(5)
+    while True:
+        changes, deviation, image, location = detect(camera, prev_frames)
+        display_image = image.copy()
+        if location is not None:
+            cv2.rectangle(display_image,
+                          location[0:2], location[2:4],
+                          (0, 0, 255), 5)
+        cv2.putText(display_image,
+                    "Deviation: %r" % deviation,
+                    (5, 20), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255))
+        cv2.putText(display_image,
+                    "Changes: %r" % changes,
+                    (5, 30), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255))
+        cv2.imshow("camera_movement", display_image)
+
+        prev_frames.insert(0, image)
+        prev_frames = prev_frames[:2]
 
 
 if __name__ == '__main__':
